@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محرر الخرائط والمعادلات العربية</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Amiri" rel="stylesheet" type="text/css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <script type="text/x-mathjax-config">
+        MathJax.Ajax.config.path["arabic"] = "https://cdn.jsdelivr.net/gh/Edraak/arabic-mathjax@1.1/dist";
+        MathJax.Hub.Config({
+            extensions: ["[arabic]/arabic.js"],
+            tex2jax: {
+                inlineMath: [["$", "$"], ["\\(", "\\)"]],
+                displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+                processEscapes: true
+            },
+            "HTML-CSS": {
+                undefinedFamily: "Amiri"
+            }
+        });
+    </script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_HTMLorMML"></script>
+
+    <style>
+        /* --- تنسيقات الصفحة العامة --- */
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f4f4f4;
+            --line-color: #bdc3c7;
+        }
+
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: 'Cairo', sans-serif; /* خط الواجهة */
+            background-color: var(--bg-color);
+            color: #333;
+        }
+
+        /* --- التخطيط (Flexbox) --- */
+        .main-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* --- شريط الأدوات --- */
+        .toolbar {
+            background: white;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            z-index: 100;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .btn {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+            color: #555;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            background: #f0f8ff;
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+        .btn-primary:hover { background: #2980b9; color: white; }
+
+        select {
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        /* --- منطقة العمل (محرر + معاينة) --- */
+        .content-area {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            /* الوضع الافتراضي للموبايل: عمودي (فوق بعض) */
+            flex-direction: column; 
+        }
+
+        /* وضع الكمبيوتر (أفقي) */
+        @media (min-width: 768px) {
+            .content-area {
+                flex-direction: row;
+            }
+        }
+
+        /* المحرر النصي */
+        .editor-container {
+            background: #fff;
+            border: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            /* الموبايل */
+            width: 100%;
+            height: 35%;
+        }
+
+        /* الكمبيوتر */
+        @media (min-width: 768px) {
+            .editor-container {
+                width: 350px;
+                height: 100%;
+                border: none;
+                border-left: 1px solid #ddd;
+            }
+        }
+
+        .editor-container textarea {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            resize: none;
+            font-family: 'Consolas', monospace; /* خط مناسب للكود */
+            font-size: 14px;
+            outline: none;
+            background: #fafafa;
+            direction: ltr; /* الكتابة من اليسار لليمين للكود */
+            text-align: left;
+        }
+
+        /* منطقة المعاينة */
+        .preview-container {
+            flex: 1;
+            background: #eef1f5;
+            overflow: auto;
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        /* --- تنسيق الخريطة الذهنية (Org Chart Style) --- */
+        .tree {
+            direction: ltr; /* الهيكل LTR لرسم الخطوط، والمحتوى بداخل البطاقات RTL */
+            text-align: center;
+            transform-origin: top center;
+        }
+
+        .tree ul {
+            padding-top: 20px; position: relative;
+            display: flex; justify-content: center;
+            margin: 0; padding-left: 0;
+        }
+
+        .tree li {
+            float: left; text-align: center;
+            list-style-type: none;
+            position: relative;
+            padding: 20px 10px 0 10px;
+        }
+
+        /* خطوط الربط */
+        .tree li::before, .tree li::after {
+            content: ''; position: absolute; top: 0; right: 50%;
+            border-top: 2px solid var(--line-color);
+            width: 50%; height: 20px; z-index: 1;
+        }
+        .tree li::after { right: auto; left: 50%; border-left: 2px solid var(--line-color); }
+        .tree li:only-child::after, .tree li:only-child::before { display: none; }
+        .tree li:only-child { padding-top: 0; }
+        .tree li:first-child::before, .tree li:last-child::after { border: 0 none; }
+        .tree li:last-child::before { border-right: 2px solid var(--line-color); border-radius: 0 5px 0 0; }
+        .tree li:first-child::after { border-radius: 5px 0 0 0; }
+        .tree ul ul::before {
+            content: ''; position: absolute; top: 0; left: 50%;
+            border-left: 2px solid var(--line-color); width: 0; height: 20px;
+        }
+
+        /* --- تنسيق البطاقة (Rich Node) --- */
+        .tree .node-card {
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            display: inline-block;
+            padding: 0;
+            text-decoration: none;
+            color: #333;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            min-width: 150px;
+            max-width: 300px;
+            position: relative;
+            z-index: 2;
+            direction: rtl; /* المحتوى عربي */
+            text-align: center;
+            vertical-align: top;
+            overflow: hidden;
+        }
+
+        .node-content {
+            padding: 12px;
+        }
+
+        /* تنسيق النصوص داخل البطاقة */
+        .node-content h1, .node-content h2, .node-content h3, .node-content strong {
+            color: var(--primary-color);
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        /* تنسيق المعادلات داخل البطاقة */
+        .MathJax_Display {
+            margin: 5px 0 !important;
+            overflow-x: auto;
+            overflow-y: hidden;
+            font-family: 'Amiri', serif; /* التأكيد على الخط */
+        }
+
+        /* ألوان المستويات */
+        .level-0 .node-card { border-top: 4px solid #2980b9; }
+        .level-1 .node-card { border-top: 4px solid #27ae60; }
+        .level-2 .node-card { border-top: 4px solid #8e44ad; }
+        .level-3 .node-card { border-top: 4px solid #e67e22; }
+
+        /* --- وضع المستند العادي --- */
+        .markdown-view {
+            background: white;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            min-height: 100%;
+            direction: rtl;
+            text-align: right;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-wrapper">
+    <div class="toolbar">
+        <select id="viewMode" onchange="render()">
+            <option value="mindmap">عرض كخريطة</option>
+            <option value="document">عرض كمستند</option>
+        </select>
+
+        <button class="btn" onclick="insertArabicMath()">
+            <i class="fas fa-square-root-variable"></i> مثال معادلة عربية
+        </button>
+
+        <button class="btn btn-primary" onclick="exportPDF()">
+            <i class="fas fa-file-pdf"></i> تحميل PDF
+        </button>
+    </div>
+
+    <div class="content-area">
+        <div class="editor-container">
+            <textarea id="editor" oninput="render()" placeholder="اكتب هنا...
+- عنوان رئيسي
+  - فرع فرعي
+    - $$ \alwaysar{x=5} $$"></textarea>
+        </div>
+
+        <div class="preview-container" id="previewContainer">
+            <div id="output"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const editor = document.getElementById('editor');
+    const output = document.getElementById('output');
+    const viewMode = document.getElementById('viewMode');
+
+    // إعدادات Markdown
+    marked.setOptions({ breaks: true, gfm: true });
+
+    // --- دالة الرسم الرئيسية ---
+    function render() {
+        const text = editor.value;
+        const mode = viewMode.value;
+
+        // 1. حماية المعادلات من Markdown
+        // نستبدل $$...$$ و $...$ برموز مؤقتة حتى لا يفسدها Markdown
+        const mathBlocks = [];
+        let cleanText = text.replace(/\$\$([\s\S]+?)\$\$/g, (match) => {
+            mathBlocks.push(match);
+            return `MATHBLOCK_${mathBlocks.length - 1}`;
+        }).replace(/\$([^\$\n]+?)\$/g, (match) => {
+            mathBlocks.push(match);
+            return `MATHINLINE_${mathBlocks.length - 1}`;
+        });
+
+        // 2. تحويل Markdown إلى HTML
+        let html = marked.parse(cleanText);
+
+        // 3. استرجاع المعادلات
+        html = html.replace(/MATHBLOCK_(\d+)/g, (match, index) => mathBlocks[index])
+                   .replace(/MATHINLINE_(\d+)/g, (match, index) => mathBlocks[index]);
+
+        // 4. العرض حسب الوضع المختار
+        if (mode === 'document') {
+            output.className = 'markdown-view';
+            output.innerHTML = html;
+        } else {
+            output.className = 'tree';
+            // إنشاء هيكل مؤقت لتحليل القوائم
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            
+            // تحويل القوائم <ul> إلى بطاقات
+            processTreeNodes(tempDiv, 0);
+            
+            output.innerHTML = '';
+            if (tempDiv.querySelector('ul')) {
+                output.appendChild(tempDiv.querySelector('ul'));
+            } else {
+                output.innerHTML = '<p style="margin-top:20px; color:#777;">ابدأ بكتابة قائمة (-) لإنشاء الخريطة</p>';
+            }
+        }
+
+        // 5. تشغيل MathJax (Render)
+        if (window.MathJax) {
+            // نطلب من MathJax إعادة معالجة العنصر output فقط
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub, output]);
+        }
+    }
+
+    // --- دالة تحويل القائمة HTML إلى بطاقات ---
+    function processTreeNodes(container, level) {
+        const uls = container.querySelectorAll('ul');
+        uls.forEach(ul => {
+            if (ul.dataset.processed) return; // لمنع التكرار
+            ul.dataset.processed = "true";
+
+            // تحويل كل LI داخل الـ UL
+            const lis = Array.from(ul.children).filter(c => c.tagName === 'LI');
+            lis.forEach(li => {
+                // البحث عن قائمة فرعية داخل الـ LI
+                let childUl = li.querySelector('ul');
+                
+                // إنشاء "البطاقة"
+                const card = document.createElement('div');
+                card.className = 'node-card level-' + (level % 4);
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'node-content';
+
+                // نقل المحتوى (نص، صور، معادلات) إلى البطاقة ما عدا القائمة الفرعية
+                const nodesToMove = [];
+                li.childNodes.forEach(node => {
+                    if (node !== childUl) nodesToMove.push(node);
+                });
+                nodesToMove.forEach(node => contentDiv.appendChild(node));
+
+                card.appendChild(contentDiv);
+                
+                // إعادة ترتيب الـ LI
+                li.innerHTML = ''; 
+                li.appendChild(card);
+                
+                // إذا كان هناك أبناء، نعيد إضافتهم ونعالجهم
+                if (childUl) {
+                    li.appendChild(childUl);
+                    processTreeNodes(childUl, level + 1);
+                }
+            });
+        });
+    }
+
+    // --- دالة تصدير PDF ---
+    function exportPDF() {
+        const element = document.getElementById('output');
+        
+        // حفظ العرض الأصلي
+        const originalStyle = element.style.cssText;
+        // جعل العرض يتناسب مع المحتوى بالكامل (لتجنب القص)
+        element.style.width = 'fit-content';
+        element.style.minWidth = '100%';
+
+        const opt = {
+            margin:       10,
+            filename:     'arabic_math_map.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true, scrollX: 0, scrollY: 0 },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
+        };
+        
+        html2pdf().set(opt).from(element).save().then(() => {
+            // استعادة الستايل الأصلي بعد التحميل
+            element.style.cssText = originalStyle;
+        });
+    }
+
+    // --- دالة إدراج المثال العربي ---
+    function insertArabicMath() {
+        const latexCode = `- **القانون العام**
+  - لحل المعادلة التربيعية
+    - $$ \\alwaysar{x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}} $$
+    - حيث:
+      - $$ \\alwaysar{a \\neq 0} $$`;
+        
+        editor.value = latexCode;
+        render();
+    }
+
+    // تشغيل أولي
+    window.onload = function() {
+        editor.value = "- **البداية**\n  - اضغط على زر المثال في الأعلى لتجربة المعادلات العربية";
+        render();
+    }
+</script>
+
+</body>
+</html>
