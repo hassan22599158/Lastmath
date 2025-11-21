@@ -240,33 +240,202 @@
             padding: 50px;
         }
 
+        /* --- Tree Base Styles --- */
         .tree { direction: ltr; text-align: center; }
         .tree ul {
-            padding-top: 20px; position: relative;
-            display: flex; justify-content: center;
-            margin: 0; padding-left: 0;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            margin: 0; padding: 0;
         }
         .tree li {
-            float: left; text-align: center;
             list-style-type: none;
             position: relative;
-            padding: 20px 10px 0 10px;
         }
 
-        .tree li::before, .tree li::after {
+        /* --- Vertical Tree (Default) --- */
+        .tree:not(.horizontal) ul {
+            padding-top: 20px;
+        }
+        .tree:not(.horizontal) li {
+            float: left; text-align: center;
+            padding: 20px 10px 0 10px;
+        }
+        .tree:not(.horizontal) li::before, .tree:not(.horizontal) li::after {
             content: ''; position: absolute; top: 0; right: 50%;
             border-top: 2px solid var(--line-color);
             width: 50%; height: 20px; z-index: 1;
         }
-        .tree li::after { right: auto; left: 50%; border-left: 2px solid var(--line-color); }
-        .tree li:only-child::after, .tree li:only-child::before { display: none; }
-        .tree li:only-child { padding-top: 0; }
-        .tree li:first-child::before, .tree li:last-child::after { border: 0 none; }
-        .tree li:last-child::before { border-right: 2px solid var(--line-color); border-radius: 0 5px 0 0; }
-        .tree li:first-child::after { border-radius: 5px 0 0 0; }
-        .tree ul ul::before {
+        .tree:not(.horizontal) li::after { right: auto; left: 50%; border-left: 2px solid var(--line-color); }
+        .tree:not(.horizontal) li:only-child::after, .tree:not(.horizontal) li:only-child::before { display: none; }
+        .tree:not(.horizontal) li:only-child { padding-top: 0; }
+        .tree:not(.horizontal) li:first-child::before, .tree:not(.horizontal) li:last-child::after { border: 0 none; }
+        .tree:not(.horizontal) li:last-child::before { border-right: 2px solid var(--line-color); border-radius: 0 5px 0 0; }
+        .tree:not(.horizontal) li:first-child::after { border-radius: 5px 0 0 0; }
+        .tree:not(.horizontal) ul ul::before {
             content: ''; position: absolute; top: 0; left: 50%;
             border-left: 2px solid var(--line-color); width: 0; height: 20px;
+        }
+
+        /* --- Horizontal Tree (RTL Support) --- */
+        .tree.horizontal {
+            direction: rtl; /* Important for Arabic Horizontal */
+            text-align: right;
+        }
+        .tree.horizontal ul {
+            flex-direction: column;
+            padding-right: 20px; /* Indent children */
+            justify-content: center;
+            align-items: flex-start; /* Align children to the right side in RTL? No, flex-start in column is top.
+                                      Wait, in RTL, flex-start horizontal is Right. */
+        }
+
+        .tree.horizontal li {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            padding: 10px 0;
+            position: relative;
+        }
+
+        /* The card comes first in DOM, then UL. In RTL flex-row, Card is Right, UL is Left. This matches Arabic map. */
+
+        /* Connectors for Horizontal */
+        .tree.horizontal li::before {
+            /* Line from Parent to this Node */
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -20px; /* Extend to parent */
+            width: 20px;
+            height: 2px;
+            background: var(--line-color);
+            z-index: 1;
+        }
+
+        /* We don't want line for root */
+        .tree.horizontal > ul > li::before {
+            display: none;
+        }
+
+        /* Vertical line connecting siblings */
+        /* Since we are using flex column for UL, we can use a border on the UL or pseudo elements on LI */
+
+        /* Let's try a different approach for connectors similar to the vertical one but rotated */
+
+        /* Reset padding/margin for horizontal li */
+        .tree.horizontal li {
+            padding: 10px 20px 10px 0; /* Space on left for children */
+        }
+
+        /* Lines structure for horizontal tree */
+        .tree.horizontal ul {
+            padding-right: 20px; /* Space for the vertical line connecting siblings */
+        }
+
+        /* Vertical line */
+        .tree.horizontal li::after {
+            content: '';
+            position: absolute;
+            right: -20px; /* Position where the vertical line should be */
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background: var(--line-color);
+            /* Logic to stop line at first/last child height */
+        }
+
+        /* Hide vertical line for Root's children container? No, needed. */
+        /* Hide vertical line for Root itself */
+        .tree.horizontal > ul > li::after {
+            display: none;
+        }
+
+        /* Fix vertical line height for first and last child */
+        .tree.horizontal li:first-child::after {
+            top: 50%; height: 50%;
+        }
+        .tree.horizontal li:last-child::after {
+            height: 50%; top: 0;
+        }
+        .tree.horizontal li:only-child::after {
+            display: none;
+        }
+
+        /* Horizontal connector from vertical line to node */
+        .tree.horizontal li::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -20px;
+            width: 20px;
+            height: 2px;
+            background: var(--line-color);
+        }
+        .tree.horizontal > ul > li::before {
+            display: none;
+        }
+
+        /* Connector from Node to Children */
+        /* If node has children (ul), draw line from Node to Children */
+        /* Actually, the UL padding-right handles the spacing. We need a line from Node Left to UL Right */
+        .tree.horizontal .node-card {
+            position: relative;
+            z-index: 2;
+            margin-left: 20px; /* Space between card and children */
+        }
+
+        /* Line leaving the node towards left (children) */
+        .tree.horizontal li:has(> ul) > .node-card::after {
+             content: '';
+             position: absolute;
+             top: 50%;
+             left: -20px;
+             width: 20px;
+             height: 2px;
+             background: var(--line-color);
+        }
+        /* Fallback for browsers not supporting :has, or just target ul sibling */
+
+        /* Alternative: Put pseudo element on the UL of children */
+        .tree.horizontal ul::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -20px; /* Connect to parent card */
+            width: 20px;
+            height: 2px;
+            background: var(--line-color);
+            display: none; /* Only show if inside an li */
+        }
+
+        /* Only for nested ULs */
+        .tree.horizontal li > ul::before {
+            display: block;
+            top: 50%; /* This might be wrong if UL height is large. We want it aligned with Parent Card center */
+            /* Aligning to parent center is hard with pure CSS if heights vary */
+        }
+
+        /* BETTER APPROACH FOR HORIZONTAL LINES (Flexbox centered) */
+        .tree.horizontal ul {
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* Centers children vertically relative to parent if parent is flex row */
+        }
+        .tree.horizontal li {
+            display: flex;
+            flex-direction: row;
+            align-items: center; /* Centers card vertically with its children group */
+        }
+
+        /* In this flex layout:
+           LI [ Card  --  UL(Children) ]
+           Since RTL: [ UL(Children) -- Card ]
+        */
+
+        /* Lines */
+        .tree.horizontal .node-content {
+             min-width: 120px;
         }
 
         .tree .node-card {
@@ -309,6 +478,94 @@
             background: white; padding: 30px; max-width: 800px; margin: 0 auto;
             direction: rtl; text-align: right; box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
+
+        /* Refined Horizontal Lines Logic */
+        /*
+           Structure:
+           LI (Flex Row)
+             > UL (Flex Col) [Left side]
+             > Card [Right side]
+        */
+
+        .tree.horizontal li {
+            padding: 5px 0;
+        }
+
+        .tree.horizontal ul {
+             padding-right: 40px; /* Space for connector */
+             position: relative;
+        }
+
+        /* Connector from Card to Children Group */
+        .tree.horizontal li > ul::before {
+            content: '';
+            position: absolute;
+            right: 0; /* Start from right edge of UL container */
+            top: 50%;
+            width: 40px; /* Connect to card */
+            height: 2px;
+            background: var(--line-color);
+            display: block;
+        }
+
+        /* Vertical Bar connecting children */
+        .tree.horizontal li > ul::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background: var(--line-color);
+            /* We need to limit this bar to cover from first child center to last child center */
+            /* Hard to do on the UL itself without JS or complex calc */
+            display: none;
+        }
+
+        /* Let's put the vertical bar on the children LIs */
+        .tree.horizontal li::before {
+            content: '';
+            position: absolute;
+            right: -20px; /* In the padding area of the parent UL */
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background: var(--line-color);
+        }
+
+        /* Horizontal connector from vertical bar to child card */
+        .tree.horizontal li::after {
+             content: '';
+             position: absolute;
+             right: -20px;
+             top: 50%;
+             width: 20px;
+             height: 2px;
+             background: var(--line-color);
+        }
+
+        /* Hide connectors for root */
+        .tree.horizontal > ul > li::before,
+        .tree.horizontal > ul > li::after {
+            display: none;
+        }
+
+        /* Fix vertical bar height for first/last */
+        .tree.horizontal li:first-child::before {
+            top: 50%; height: 50%;
+        }
+        .tree.horizontal li:last-child::before {
+            height: 50%; top: 0;
+        }
+        .tree.horizontal li:only-child::before {
+            display: none;
+        }
+
+        /* Special adjustment for root UL padding */
+        .tree.horizontal > ul {
+            padding-right: 0;
+        }
+
     </style>
 </head>
 <body>
@@ -318,6 +575,18 @@
         <select id="viewMode" onchange="render()">
             <option value="mindmap">عرض كخريطة</option>
             <option value="document">عرض كمستند</option>
+        </select>
+
+        <!-- New Controls -->
+        <select id="layoutMode" onchange="render()">
+            <option value="vertical">تخطيط عمودي</option>
+            <option value="horizontal">تخطيط أفقي</option>
+        </select>
+
+        <select id="equationMode" onchange="render()">
+            <option value="default">معادلات: افتراضي</option>
+            <option value="arabic">معادلات: عربي</option>
+            <option value="english">معادلات: إنجليزي</option>
         </select>
 
         <button class="btn" onclick="insertArabicMath()">
@@ -356,6 +625,8 @@
     const editor = document.getElementById('editor');
     const output = document.getElementById('output');
     const viewMode = document.getElementById('viewMode');
+    const layoutMode = document.getElementById('layoutMode');
+    const equationMode = document.getElementById('equationMode');
     const panZoomContainer = document.getElementById('panZoomContainer');
     const previewWrapper = document.getElementById('previewWrapper');
 
@@ -412,33 +683,66 @@
 
     // --- Render ---
     function render() {
-        const text = editor.value;
+        let text = editor.value;
         const mode = viewMode.value;
+        const layout = layoutMode.value;
+        const eqStyle = equationMode.value;
 
+        // 1. Handle Equation Styles BEFORE parsing logic
+        const processEquation = (mathContent) => {
+            if (eqStyle === 'default') return mathContent;
+
+            // Clean up existing wraps if any to avoid nesting or partials
+            // This is a simplistic cleanup: remove \alwaysar{ and ending }
+            // Note: This assumes standard usage.
+            let clean = mathContent;
+            if (clean.includes('\\alwaysar{')) {
+                 // Attempt to strip it. This is heuristic.
+                 // We just remove the string "\alwaysar" and rely on LaTeX group braces {} to be benign.
+                 clean = clean.replace(/\\alwaysar\s*\{/g, '{');
+            }
+
+            if (eqStyle === 'english') {
+                return clean;
+            }
+            if (eqStyle === 'arabic') {
+                return `\\alwaysar{${clean}}`;
+            }
+            return mathContent;
+        };
+
+        // We need to intercept the math block replacement logic to apply styles
         const mathBlocks = [];
-        let cleanText = text.replace(/\$\$([\s\S]+?)\$\$/g, (m) => {
-            mathBlocks.push(m); return `MATHBLOCK_${mathBlocks.length - 1}`;
-        }).replace(/\$([^\$\n]+?)\$/g, (m) => {
-            mathBlocks.push(m); return `MATHINLINE_${mathBlocks.length - 1}`;
+        let cleanText = text.replace(/\$\$([\s\S]+?)\$\$/g, (m, content) => {
+            const processed = processEquation(content);
+            mathBlocks.push(processed);
+            return `MATHBLOCK_${mathBlocks.length - 1}`;
+        }).replace(/\$([^\$\n]+?)\$/g, (m, content) => {
+            const processed = processEquation(content);
+            mathBlocks.push(processed);
+            return `MATHINLINE_${mathBlocks.length - 1}`;
         });
 
         let html = marked.parse(cleanText);
 
-        // وضع المعادلة داخل div للسكرول
+        // Reinsert Math
         html = html.replace(/MATHBLOCK_(\d+)/g, (m, i) => {
-            return `<div class="math-scroll-container">$$${mathBlocks[i].replace(/\$\$/g, '')}$$</div>`;
+            return `<div class="math-scroll-container">$$${mathBlocks[i]}$$</div>`;
         }).replace(/MATHINLINE_(\d+)/g, (m, i) => {
-            return `<span style="white-space: nowrap;">${mathBlocks[i]}</span>`;
+            return `<span style="white-space: nowrap;">$${mathBlocks[i]}$</span>`;
         });
 
+        // 2. Render View
         if (mode === 'document') {
             output.className = 'markdown-view';
             output.innerHTML = html;
             resetZoom();
             panZoomContainer.style.width = '100%';
             previewWrapper.style.cursor = 'default';
+            // Hide layout controls for document view? Or just ignore.
         } else {
-            output.className = 'tree';
+            // Mindmap View
+            output.className = 'tree ' + (layout === 'horizontal' ? 'horizontal' : '');
             panZoomContainer.style.width = 'fit-content';
             previewWrapper.style.cursor = 'grab';
             
@@ -476,6 +780,12 @@
                 nodesToMove.forEach(node => contentDiv.appendChild(node));
                 card.appendChild(contentDiv);
                 li.innerHTML = ''; 
+
+                // Reorder for DOM consistency if needed, but Flexbox handles visual order.
+                // For Vertical: Card, then UL.
+                // For Horizontal RTL: Card, then UL. Flex-row makes it [UL - Card].
+                // So standard DOM order is fine: LI > [Card, UL].
+
                 li.appendChild(card);
                 if (childUl) {
                     li.appendChild(childUl);
@@ -485,7 +795,7 @@
         });
     }
 
-    // --- PDF Export (الأصلي الموجود في الكود) ---
+    // --- PDF Export ---
     function exportSmartPDF() {
         const element = document.getElementById('output');
         const originalTransform = panZoomContainer.style.transform;
@@ -522,29 +832,24 @@
         }, 100);
     }
 
-    // --- دالة تصدير الصورة الجديدة (html2canvas) ---
+    // --- Image Export ---
     function exportToImage() {
         const element = document.getElementById('output');
         const originalTransform = panZoomContainer.style.transform;
 
-        // إلغاء الزووم لأخذ الصورة كاملة
         panZoomContainer.style.transform = 'none';
         panZoomContainer.style.width = 'fit-content';
 
-        // استخدام html2canvas
         html2canvas(element, {
-            scale: 3, // جودة عالية
-            backgroundColor: "#ffffff", // خلفية بيضاء
+            scale: 3,
+            backgroundColor: "#ffffff",
             useCORS: true,
             logging: false
         }).then(canvas => {
-            // إنشاء رابط التحميل
             const link = document.createElement('a');
             link.download = 'mindmap_image.png';
             link.href = canvas.toDataURL("image/png");
             link.click();
-            
-            // استعادة وضع الزووم السابق
             panZoomContainer.style.transform = originalTransform;
         }).catch(err => {
             console.error(err);
@@ -556,9 +861,13 @@
     function insertArabicMath() {
         editor.value = `- **القانون العام**
   - لحل المعادلة التربيعية
-    - $$ \\alwaysar{x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}} $$
+    - $$ x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a} $$
     - حيث:
-      - $$ \\alwaysar{a \\neq 0} $$`;
+      - $$ a \\neq 0 $$`;
+        // Removed explicit \alwaysar from example since we have a mode for it now,
+        // or should I leave it? The user said "default" shows as written.
+        // If I use "Arabic Mode", it will add it.
+        // I'll change the example to plain LaTeX to demonstrate the feature better.
         render();
     }
 
