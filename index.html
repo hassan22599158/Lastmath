@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>محرر الخرائط والمعادلات الذكي</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Amiri" rel="stylesheet" type="text/css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <script type="text/x-mathjax-config">
+        MathJax.Ajax.config.path["arabic"] = "https://cdn.jsdelivr.net/gh/Edraak/arabic-mathjax@1.1/dist";
+        MathJax.Hub.Config({
+            extensions: ["[arabic]/arabic.js"],
+            tex2jax: {
+                inlineMath: [["$", "$"], ["\\(", "\\)"]],
+                displayMath: [["$$", "$$"], ["\\[", "\\]"]],
+                processEscapes: true
+            },
+            "HTML-CSS": {
+                undefinedFamily: "Amiri",
+                linebreaks: { automatic: true }
+            }
+        });
+    </script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_HTMLorMML"></script>
+
+    <style>
+        /* --- تنسيقات الصفحة العامة --- */
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #f4f4f4;
+            --line-color: #bdc3c7;
+        }
+
+        * { box-sizing: border-box; }
+
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--bg-color);
+            color: #333;
+            overflow: hidden; /* منع تمرير الصفحة بالكامل */
+        }
+
+        /* --- التخطيط الرئيسي --- */
+        .main-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* --- شريط الأدوات --- */
+        .toolbar {
+            height: 60px;
+            background: white;
+            padding: 0 15px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+            z-index: 100;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .btn {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+            color: #555;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+            height: 36px;
+            white-space: nowrap;
+        }
+        .btn:hover { background: #f0f8ff; color: var(--accent-color); border-color: var(--accent-color); }
+        .btn-primary { background: var(--accent-color); color: white; border-color: var(--accent-color); }
+        .btn-primary:hover { background: #2980b9; color: white; }
+
+        /* أزرار التحكم في الزووم */
+        .zoom-controls {
+            display: flex;
+            gap: 5px;
+            margin-right: auto; /* دفعها لليسار */
+            background: #f8f9fa;
+            padding: 3px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        .zoom-btn {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            background: white;
+            cursor: pointer;
+            border-radius: 3px;
+            color: #555;
+        }
+        .zoom-btn:hover { background: #e2e6ea; }
+
+        select {
+            padding: 0 10px;
+            height: 36px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        /* --- منطقة العمل --- */
+        .content-area {
+            display: flex;
+            height: calc(100vh - 60px); /* المساحة المتبقية */
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* وضع الموبايل */
+        @media (max-width: 767px) {
+            .content-area { flex-direction: column; }
+            .editor-container {
+                width: 100%;
+                height: 35%;
+                border-bottom: 2px solid #ddd;
+                flex-shrink: 0;
+            }
+            .preview-wrapper {
+                width: 100%;
+                height: 65%;
+                flex-grow: 1;
+            }
+            .toolbar { overflow-x: auto; } /* تمرير للشريط في الموبايل */
+        }
+
+        /* وضع الكمبيوتر */
+        @media (min-width: 768px) {
+            .content-area { flex-direction: row; }
+            .editor-container {
+                width: 350px;
+                height: 100%;
+                border-left: 1px solid #ddd;
+                flex-shrink: 0;
+            }
+            .preview-wrapper {
+                flex: 1;
+                height: 100%;
+            }
+        }
+
+        /* --- المحرر --- */
+        .editor-container {
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+        .editor-container textarea {
+            width: 100%;
+            height: 100%;
+            padding: 15px;
+            border: none;
+            resize: none;
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+            outline: none;
+            background: #fafafa;
+            overflow-y: auto;
+        }
+
+        /* --- حاوية المعاينة (النافذة) --- */
+        .preview-wrapper {
+            background: #eef1f5;
+            overflow: hidden; /* إخفاء ما يخرج عن الإطار */
+            position: relative;
+            cursor: grab; /* شكل اليد للسحب */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .preview-wrapper:active {
+            cursor: grabbing; /* شكل اليد القابضة عند السحب */
+        }
+
+        /* --- العنصر القابل للتحريك والتكبير --- */
+        .pan-zoom-container {
+            transform-origin: center center;
+            transition: transform 0.1s ease-out; /* حركة ناعمة */
+            display: inline-block;
+            /* هام: السماح للعنصر بأخذ حجمه */
+            width: fit-content;
+            height: fit-content;
+            padding: 50px; /* هوامش لعدم التصاق الخريطة بالحواف */
+        }
+
+        /* --- تنسيق الشجرة --- */
+        .tree {
+            direction: ltr;
+            text-align: center;
+        }
+        .tree ul {
+            padding-top: 20px; position: relative;
+            display: flex; justify-content: center;
+            margin: 0; padding-left: 0;
+        }
+        .tree li {
+            float: left; text-align: center;
+            list-style-type: none;
+            position: relative;
+            padding: 20px 10px 0 10px;
+        }
+        /* الروابط */
+        .tree li::before, .tree li::after {
+            content: ''; position: absolute; top: 0; right: 50%;
+            border-top: 2px solid var(--line-color);
+            width: 50%; height: 20px; z-index: 1;
+        }
+        .tree li::after { right: auto; left: 50%; border-left: 2px solid var(--line-color); }
+        .tree li:only-child::after, .tree li:only-child::before { display: none; }
+        .tree li:only-child { padding-top: 0; }
+        .tree li:first-child::before, .tree li:last-child::after { border: 0 none; }
+        .tree li:last-child::before { border-right: 2px solid var(--line-color); border-radius: 0 5px 0 0; }
+        .tree li:first-child::after { border-radius: 5px 0 0 0; }
+        .tree ul ul::before {
+            content: ''; position: absolute; top: 0; left: 50%;
+            border-left: 2px solid var(--line-color); width: 0; height: 20px;
+        }
+
+        /* --- البطاقات --- */
+        .tree .node-card {
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            display: inline-block;
+            padding: 0;
+            color: #333;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            min-width: 140px;
+            max-width: 280px;
+            position: relative;
+            z-index: 2;
+            direction: rtl;
+            text-align: center;
+            vertical-align: top;
+        }
+        .node-content { padding: 10px; }
+        .node-content h1, .node-content h2, .node-content h3 {
+            color: var(--primary-color); margin-bottom: 5px; font-size: 1.1em;
+        }
+        .MathJax_Display { margin: 4px 0 !important; overflow-x: auto; overflow-y: hidden; }
+        
+        /* مستويات الألوان */
+        .level-0 .node-card { border-top: 4px solid #2980b9; }
+        .level-1 .node-card { border-top: 4px solid #27ae60; }
+        .level-2 .node-card { border-top: 4px solid #8e44ad; }
+        .level-3 .node-card { border-top: 4px solid #e67e22; }
+
+        /* وضع المستند */
+        .markdown-view {
+            background: white; padding: 30px; max-width: 800px; margin: 0 auto;
+            direction: rtl; text-align: right; box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-wrapper">
+    <div class="toolbar">
+        <select id="viewMode" onchange="render()">
+            <option value="mindmap">عرض كخريطة</option>
+            <option value="document">عرض كمستند</option>
+        </select>
+
+        <button class="btn" onclick="insertSample()">
+            <i class="fas fa-pen"></i> مثال
+        </button>
+
+        <button class="btn btn-primary" onclick="exportSmartPDF()">
+            <i class="fas fa-file-pdf"></i> PDF ذكي
+        </button>
+
+        <div class="zoom-controls">
+            <button class="zoom-btn" onclick="zoomOut()" title="تصغير"><i class="fas fa-minus"></i></button>
+            <button class="zoom-btn" onclick="resetZoom()" title="إعادة ضبط"><i class="fas fa-compress-arrows-alt"></i></button>
+            <button class="zoom-btn" onclick="zoomIn()" title="تكبير"><i class="fas fa-plus"></i></button>
+        </div>
+    </div>
+
+    <div class="content-area">
+        <div class="editor-container">
+            <textarea id="editor" oninput="render()" placeholder="اكتب هنا..."></textarea>
+        </div>
+
+        <div class="preview-wrapper" id="previewWrapper">
+            <div class="pan-zoom-container" id="panZoomContainer">
+                <div id="output"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const editor = document.getElementById('editor');
+    const output = document.getElementById('output');
+    const viewMode = document.getElementById('viewMode');
+    const panZoomContainer = document.getElementById('panZoomContainer');
+    const previewWrapper = document.getElementById('previewWrapper');
+
+    marked.setOptions({ breaks: true, gfm: true });
+
+    // متغيرات الـ Pan & Zoom
+    let scale = 1;
+    let panning = false;
+    let pointX = 0;
+    let pointY = 0;
+    let startX = 0;
+    let startY = 0;
+
+    function updateTransform() {
+        panZoomContainer.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
+    }
+
+    // --- منطق التحريك (Pan) ---
+    previewWrapper.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        startX = e.clientX - pointX;
+        startY = e.clientY - pointY;
+        panning = true;
+    });
+
+    previewWrapper.addEventListener('mouseup', () => {
+        panning = false;
+    });
+
+    previewWrapper.addEventListener('mouseleave', () => {
+        panning = false;
+    });
+
+    previewWrapper.addEventListener('mousemove', (e) => {
+        if (!panning) return;
+        e.preventDefault();
+        pointX = e.clientX - startX;
+        pointY = e.clientY - startY;
+        updateTransform();
+    });
+
+    // --- منطق التكبير (Zoom) بالعجلة ---
+    previewWrapper.addEventListener('wheel', (e) => {
+        if (e.ctrlKey || viewMode.value === 'mindmap') {
+            e.preventDefault();
+            const xs = (e.clientX - pointX) / scale;
+            const ys = (e.clientY - pointY) / scale;
+            const delta = -e.deltaY;
+            
+            (delta > 0) ? (scale *= 1.1) : (scale /= 1.1);
+            
+            // حدود الزووم
+            scale = Math.min(Math.max(0.1, scale), 5);
+
+            // معادلة لتركيز الزووم في مكان الماوس (تقريباً)
+            // للتبسيط في هذا الكود سنجعل الزووم مركزياً أو بسيطاً للحفاظ على استقرار الحركة
+            updateTransform();
+        }
+    });
+
+    // --- أزرار التحكم ---
+    function zoomIn() { scale *= 1.2; updateTransform(); }
+    function zoomOut() { scale /= 1.2; updateTransform(); }
+    function resetZoom() { scale = 1; pointX = 0; pointY = 0; updateTransform(); }
+
+
+    // --- دالة الرسم (Render) ---
+    function render() {
+        const text = editor.value;
+        const mode = viewMode.value;
+
+        // حماية المعادلات
+        const mathBlocks = [];
+        let cleanText = text.replace(/\$\$([\s\S]+?)\$\$/g, (m) => {
+            mathBlocks.push(m); return `MATHBLOCK_${mathBlocks.length - 1}`;
+        }).replace(/\$([^\$\n]+?)\$/g, (m) => {
+            mathBlocks.push(m); return `MATHINLINE_${mathBlocks.length - 1}`;
+        });
+
+        let html = marked.parse(cleanText);
+        html = html.replace(/MATHBLOCK_(\d+)/g, (m, i) => mathBlocks[i])
+                   .replace(/MATHINLINE_(\d+)/g, (m, i) => mathBlocks[i]);
+
+        if (mode === 'document') {
+            output.className = 'markdown-view';
+            output.innerHTML = html;
+            // إعادة ضبط العرض للمستند
+            resetZoom();
+            panZoomContainer.style.display = 'block';
+            panZoomContainer.style.width = '100%';
+        } else {
+            output.className = 'tree';
+            panZoomContainer.style.display = 'inline-block';
+            panZoomContainer.style.width = 'fit-content';
+            
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            processTreeNodes(tempDiv, 0);
+            output.innerHTML = '';
+            if (tempDiv.querySelector('ul')) {
+                output.appendChild(tempDiv.querySelector('ul'));
+            } else {
+                output.innerHTML = '<p style="color:#888;">ابدأ بقائمة (-)</p>';
+            }
+        }
+
+        if (window.MathJax) {
+            MathJax.Hub.Queue(["Typeset", MathJax.Hub, output]);
+        }
+    }
+
+    function processTreeNodes(container, level) {
+        const uls = container.querySelectorAll('ul');
+        uls.forEach(ul => {
+            if (ul.dataset.processed) return;
+            ul.dataset.processed = "true";
+            Array.from(ul.children).filter(c => c.tagName === 'LI').forEach(li => {
+                let childUl = li.querySelector('ul');
+                const card = document.createElement('div');
+                card.className = 'node-card level-' + (level % 4);
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'node-content';
+                const nodesToMove = [];
+                li.childNodes.forEach(node => {
+                    if (node !== childUl) nodesToMove.push(node);
+                });
+                nodesToMove.forEach(node => contentDiv.appendChild(node));
+                card.appendChild(contentDiv);
+                li.innerHTML = ''; 
+                li.appendChild(card);
+                if (childUl) {
+                    li.appendChild(childUl);
+                    processTreeNodes(childUl, level + 1);
+                }
+            });
+        });
+    }
+
+    // --- التصدير الذكي للـ PDF (يتجاهل الزووم ويأخذ الحجم الكامل) ---
+    function exportSmartPDF() {
+        const element = document.getElementById('output'); // نأخذ عنصر الشجرة فقط
+        
+        // 1. حفظ الحالة الحالية للعرض والتحويل
+        const originalTransform = panZoomContainer.style.transform;
+        
+        // 2. إعادة ضبط الحاوية مؤقتاً للتصدير
+        // نقوم بإلغاء أي Scale أو Translate لضمان دقة الطباعة
+        panZoomContainer.style.transform = 'none';
+        panZoomContainer.style.width = 'fit-content';
+
+        // 3. انتظار لحظي لتطبيق الستايل ثم الحساب
+        setTimeout(() => {
+            // حساب الأبعاد الحقيقية للشجرة بالكامل
+            const trueWidth = element.scrollWidth + 40; // هامش
+            const trueHeight = element.scrollHeight + 40;
+
+            const opt = {
+                margin:       20,
+                filename:     'smart_mindmap.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { 
+                    scale: 2, 
+                    useCORS: true,
+                    width: trueWidth,
+                    height: trueHeight,
+                    windowWidth: trueWidth, // مهم جداً
+                    x: 0, y: 0
+                },
+                jsPDF: { 
+                    unit: 'px', 
+                    format: [trueWidth, trueHeight], // حجم صفحة ديناميكي
+                    orientation: trueWidth > trueHeight ? 'landscape' : 'portrait'
+                }
+            };
+            
+            // التصدير ثم استعادة الحالة
+            html2pdf().set(opt).from(element).save().then(() => {
+                // استعادة الزووم والمكان
+                panZoomContainer.style.transform = originalTransform;
+            });
+        }, 100);
+    }
+
+    function insertSample() {
+        editor.value = `- **قوانين الأسس**
+  - **الضرب والقسمة**
+    - $$ \\alwaysar{a^n \\times a^m = a^{n+m}} $$
+    - $$ \\alwaysar{\\frac{a^n}{a^m} = a^{n-m}} $$
+  - **مثال 2**
+    - $$ \\alwaysar{(a^n)^m = a^{nm}} $$`;
+        render();
+    }
+
+    window.onload = function() {
+        insertSample();
+    };
+</script>
+
+</body>
+</html>
