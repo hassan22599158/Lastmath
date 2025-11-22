@@ -48,7 +48,6 @@
             --line-color: #bdc3c7;
         }
 
-        /* التنسيقات كما وردت في الكود الأصلي */
         * { box-sizing: border-box; }
 
         .MathJax, .MathJax *, .MathJax_Display, .MathJax_Display * {
@@ -129,6 +128,9 @@
         .btn:hover { background: #f0f8ff; color: var(--accent-color); border-color: var(--accent-color); }
         .btn-primary { background: var(--accent-color); color: white; border-color: var(--accent-color); }
         .btn-primary:hover { background: #2980b9; color: white; }
+        .btn-info { background: #17a2b8; color: white; border-color: #17a2b8; }
+        .btn-info:hover { background: #138496; color: white; }
+
 
         .zoom-controls {
             display: flex;
@@ -279,79 +281,34 @@
 
         /* --- Horizontal Tree (RTL Support) --- */
         .tree.horizontal {
-            direction: rtl; /* Important for Arabic Horizontal */
+            direction: rtl;
             text-align: right;
         }
         .tree.horizontal ul {
             flex-direction: column;
-            padding-right: 20px; /* Indent children */
+            padding-right: 20px;
             justify-content: center;
-            align-items: flex-start; /* Align children to the right side in RTL? No, flex-start in column is top.
-                                      Wait, in RTL, flex-start horizontal is Right. */
+            align-items: flex-start;
         }
-
         .tree.horizontal li {
             display: flex;
             flex-direction: row;
             align-items: center;
-            padding: 10px 0;
+            padding: 10px 20px 10px 0;
             position: relative;
         }
-
-        /* The card comes first in DOM, then UL. In RTL flex-row, Card is Right, UL is Left. This matches Arabic map. */
-
-        /* Connectors for Horizontal */
-        .tree.horizontal li::before {
-            /* Line from Parent to this Node */
-            content: '';
-            position: absolute;
-            top: 50%;
-            right: -20px; /* Extend to parent */
-            width: 20px;
-            height: 2px;
-            background: var(--line-color);
-            z-index: 1;
-        }
-
-        /* We don't want line for root */
-        .tree.horizontal > ul > li::before {
-            display: none;
-        }
-
-        /* Vertical line connecting siblings */
-        /* Since we are using flex column for UL, we can use a border on the UL or pseudo elements on LI */
-
-        /* Let's try a different approach for connectors similar to the vertical one but rotated */
-
-        /* Reset padding/margin for horizontal li */
-        .tree.horizontal li {
-            padding: 10px 20px 10px 0; /* Space on left for children */
-        }
-
-        /* Lines structure for horizontal tree */
-        .tree.horizontal ul {
-            padding-right: 20px; /* Space for the vertical line connecting siblings */
-        }
-
-        /* Vertical line */
         .tree.horizontal li::after {
             content: '';
             position: absolute;
-            right: -20px; /* Position where the vertical line should be */
+            right: -20px;
             top: 0;
             height: 100%;
             width: 2px;
             background: var(--line-color);
-            /* Logic to stop line at first/last child height */
         }
-
-        /* Hide vertical line for Root's children container? No, needed. */
-        /* Hide vertical line for Root itself */
         .tree.horizontal > ul > li::after {
             display: none;
         }
-
-        /* Fix vertical line height for first and last child */
         .tree.horizontal li:first-child::after {
             top: 50%; height: 50%;
         }
@@ -361,8 +318,6 @@
         .tree.horizontal li:only-child::after {
             display: none;
         }
-
-        /* Horizontal connector from vertical line to node */
         .tree.horizontal li::before {
             content: '';
             position: absolute;
@@ -375,17 +330,11 @@
         .tree.horizontal > ul > li::before {
             display: none;
         }
-
-        /* Connector from Node to Children */
-        /* If node has children (ul), draw line from Node to Children */
-        /* Actually, the UL padding-right handles the spacing. We need a line from Node Left to UL Right */
         .tree.horizontal .node-card {
             position: relative;
             z-index: 2;
-            margin-left: 20px; /* Space between card and children */
+            margin-left: 20px;
         }
-
-        /* Line leaving the node towards left (children) */
         .tree.horizontal li:has(> ul) > .node-card::after {
              content: '';
              position: absolute;
@@ -395,45 +344,66 @@
              height: 2px;
              background: var(--line-color);
         }
-        /* Fallback for browsers not supporting :has, or just target ul sibling */
-
-        /* Alternative: Put pseudo element on the UL of children */
-        .tree.horizontal ul::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            right: -20px; /* Connect to parent card */
-            width: 20px;
-            height: 2px;
-            background: var(--line-color);
-            display: none; /* Only show if inside an li */
-        }
-
-        /* Only for nested ULs */
         .tree.horizontal li > ul::before {
             display: block;
-            top: 50%; /* This might be wrong if UL height is large. We want it aligned with Parent Card center */
-            /* Aligning to parent center is hard with pure CSS if heights vary */
+            top: 50%;
         }
-
-        /* BETTER APPROACH FOR HORIZONTAL LINES (Flexbox centered) */
         .tree.horizontal ul {
             display: flex;
             flex-direction: column;
-            justify-content: center; /* Centers children vertically relative to parent if parent is flex row */
+            justify-content: center;
         }
         .tree.horizontal li {
-            display: flex;
-            flex-direction: row;
-            align-items: center; /* Centers card vertically with its children group */
+            padding: 5px 0;
         }
-
-        /* In this flex layout:
-           LI [ Card  --  UL(Children) ]
-           Since RTL: [ UL(Children) -- Card ]
-        */
-
-        /* Lines */
+        .tree.horizontal ul {
+             padding-right: 40px;
+             position: relative;
+        }
+        .tree.horizontal li > ul::before {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            width: 40px;
+            height: 2px;
+            background: var(--line-color);
+            display: block;
+        }
+        .tree.horizontal li::before {
+            content: '';
+            position: absolute;
+            right: -20px;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background: var(--line-color);
+        }
+        .tree.horizontal li::after {
+             content: '';
+             position: absolute;
+             right: -20px;
+             top: 50%;
+             width: 20px;
+             height: 2px;
+             background: var(--line-color);
+        }
+        .tree.horizontal > ul > li::before,
+        .tree.horizontal > ul > li::after {
+            display: none;
+        }
+        .tree.horizontal li:first-child::before {
+            top: 50%; height: 50%;
+        }
+        .tree.horizontal li:last-child::before {
+            height: 50%; top: 0;
+        }
+        .tree.horizontal li:only-child::before {
+            display: none;
+        }
+        .tree.horizontal > ul {
+            padding-right: 0;
+        }
         .tree.horizontal .node-content {
              min-width: 120px;
         }
@@ -447,7 +417,7 @@
             color: #333;
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             min-width: 180px;
-            max-width: 350px;
+            max-width: 400px; /* Increased max width for richer content */
             position: relative;
             z-index: 2;
             direction: rtl;
@@ -457,12 +427,17 @@
         .node-content {
             padding: 12px;
             width: 100%;
+            max-height: 400px;
+            overflow-y: auto;
+            text-align: right;
         }
+        .node-content img { max-width: 100%; height: auto; }
         .node-content h1, .node-content h2, .node-content h3 {
             color: var(--primary-color); margin-bottom: 5px; font-size: 1.1em; font-weight: bold;
         }
         .node-content table {
             width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 0.9em;
+            display: table; /* Reset block display if needed, but table is fine */
         }
         .node-content th, .node-content td {
             border: 1px solid #eee; padding: 5px;
@@ -479,93 +454,30 @@
             direction: rtl; text-align: right; box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
 
-        /* Refined Horizontal Lines Logic */
-        /*
-           Structure:
-           LI (Flex Row)
-             > UL (Flex Col) [Left side]
-             > Card [Right side]
-        */
-
-        .tree.horizontal li {
-            padding: 5px 0;
-        }
-
-        .tree.horizontal ul {
-             padding-right: 40px; /* Space for connector */
-             position: relative;
-        }
-
-        /* Connector from Card to Children Group */
-        .tree.horizontal li > ul::before {
-            content: '';
-            position: absolute;
-            right: 0; /* Start from right edge of UL container */
-            top: 50%;
-            width: 40px; /* Connect to card */
-            height: 2px;
-            background: var(--line-color);
-            display: block;
-        }
-
-        /* Vertical Bar connecting children */
-        .tree.horizontal li > ul::after {
-            content: '';
-            position: absolute;
-            right: 0;
-            top: 0;
-            height: 100%;
-            width: 2px;
-            background: var(--line-color);
-            /* We need to limit this bar to cover from first child center to last child center */
-            /* Hard to do on the UL itself without JS or complex calc */
+        /* --- Modal Styles --- */
+        .modal-overlay {
             display: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 1000;
+            justify-content: center; align-items: center;
         }
-
-        /* Let's put the vertical bar on the children LIs */
-        .tree.horizontal li::before {
-            content: '';
-            position: absolute;
-            right: -20px; /* In the padding area of the parent UL */
-            top: 0;
-            height: 100%;
-            width: 2px;
-            background: var(--line-color);
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: white; padding: 25px; border-radius: 10px;
+            width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;
+            direction: rtl; text-align: right;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
-
-        /* Horizontal connector from vertical bar to child card */
-        .tree.horizontal li::after {
-             content: '';
-             position: absolute;
-             right: -20px;
-             top: 50%;
-             width: 20px;
-             height: 2px;
-             background: var(--line-color);
+        .modal-close {
+            position: absolute; top: 15px; left: 15px;
+            background: none; border: none; font-size: 20px; cursor: pointer; color: #999;
         }
-
-        /* Hide connectors for root */
-        .tree.horizontal > ul > li::before,
-        .tree.horizontal > ul > li::after {
-            display: none;
-        }
-
-        /* Fix vertical bar height for first/last */
-        .tree.horizontal li:first-child::before {
-            top: 50%; height: 50%;
-        }
-        .tree.horizontal li:last-child::before {
-            height: 50%; top: 0;
-        }
-        .tree.horizontal li:only-child::before {
-            display: none;
-        }
-
-        /* Special adjustment for root UL padding */
-        .tree.horizontal > ul {
-            padding-right: 0;
-        }
-
+        .modal-close:hover { color: #333; }
+        .modal-content h2 { margin-top: 0; color: var(--primary-color); }
+        .modal-content ul { padding-right: 20px; }
+        .modal-content li { margin-bottom: 8px; }
+        .modal-content code { background: #f4f4f4; padding: 2px 5px; border-radius: 3px; font-family: monospace; direction: ltr; display: inline-block; }
     </style>
 </head>
 <body>
@@ -577,7 +489,6 @@
             <option value="document">عرض كمستند</option>
         </select>
 
-        <!-- New Controls -->
         <select id="layoutMode" onchange="render()">
             <option value="vertical">تخطيط عمودي</option>
             <option value="horizontal">تخطيط أفقي</option>
@@ -589,8 +500,12 @@
             <option value="english">معادلات: إنجليزي</option>
         </select>
 
-        <button class="btn" onclick="insertArabicMath()">
-            <i class="fas fa-square-root-variable"></i> مثال معادلة
+        <button class="btn btn-info" onclick="openUsageModal()">
+            <i class="fas fa-info-circle"></i> طريقة الاستخدام
+        </button>
+
+        <button class="btn" onclick="insertFullExample()">
+            <i class="fas fa-magic"></i> مثال شامل
         </button>
 
         <button class="btn" onclick="exportToImage()">
@@ -618,6 +533,42 @@
                 <div id="output"></div>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Usage Modal -->
+<div class="modal-overlay" id="usageModal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeUsageModal()"><i class="fas fa-times"></i></button>
+        <h2>دليل استخدام Markdown</h2>
+        <p>يدعم المحرر تنسيق Markdown القياسي لإنشاء الخرائط الذهنية. إليك القواعد الأساسية:</p>
+
+        <h3>1. الهيكلية (Nodes):</h3>
+        <ul>
+            <li>استخدم العناوين <code>#</code> لإنشاء عقد رئيسية وفرعية.</li>
+            <li><code># عنوان رئيسي</code>: عقدة المستوى الأول.</li>
+            <li><code>## عنوان فرعي</code>: عقدة تابعة للعنوان الرئيسي.</li>
+            <li><code>### عنوان فرعي 2</code>: وهكذا.</li>
+        </ul>
+
+        <h3>2. القوائم (Lists):</h3>
+        <ul>
+            <li>استخدم القوائم <code>-</code> أو <code>*</code> لإنشاء عناصر تابعة لأي عقدة.</li>
+            <li>يمكنك استخدام قوائم متداخلة لإنشاء تفريعات.</li>
+        </ul>
+
+        <h3>3. المحتوى الغني:</h3>
+        <ul>
+            <li>أي نص، جدول، صورة، أو كود تكتبه تحت العنوان (وقبل العنوان التالي) سيظهر داخل "بطاقة" العقدة.</li>
+            <li>يمكنك إضافة جداول:
+<pre style="direction: ltr; text-align: left; background: #eee; padding: 10px;">
+| Col 1 | Col 2 |
+|-------|-------|
+| Val 1 | Val 2 |
+</pre>
+            </li>
+            <li>يمكنك إضافة معادلات رياضية باستخدام <code>$$ معادلة $$</code>.</li>
+        </ul>
     </div>
 </div>
 
@@ -681,6 +632,114 @@
     function zoomOut() { scale /= 1.2; updateTransform(); }
     function resetZoom() { scale = 1; pointX = 0; pointY = 0; updateTransform(); }
 
+    // --- Logic: Convert Flat HTML to Tree ---
+    function convertFlatHtmlToTree(container) {
+        const rootUl = document.createElement('ul');
+
+        // Stack keeps track of the current hierarchy path:
+        // Items are { ul: <the children container of this node>, level: <heading level>, li: <the node li itself> }
+        // We start with a virtual root level 0.
+        const stack = [{ul: rootUl, level: 0, li: null}];
+
+        // We also need to handle orphan content (content before any heading).
+        // We treat it as content of the current "active" node (top of stack).
+        // But standard processTreeNodes expects an LI wrapping content.
+        // So if we are at root and receive content, we might need a 'Root' LI.
+
+        let currentLi = null;
+
+        Array.from(container.children).forEach(child => {
+            const tagName = child.tagName;
+            const headerMatch = tagName.match(/^H(\d)$/);
+
+            if (headerMatch) {
+                const level = parseInt(headerMatch[1]);
+
+                // Pop stack until we find a parent with level < current heading level
+                while (stack.length > 1 && stack[stack.length - 1].level >= level) {
+                    stack.pop();
+                }
+
+                const parent = stack[stack.length - 1];
+
+                // Create new List Item for this Heading
+                const newLi = document.createElement('li');
+
+                // Append the Heading itself
+                newLi.appendChild(child);
+
+                // Append this LI to the parent's UL
+                parent.ul.appendChild(newLi);
+
+                // Create a UL for potential children of this Heading
+                const newUl = document.createElement('ul');
+                newLi.appendChild(newUl);
+
+                // Push to stack
+                stack.push({ul: newUl, level: level, li: newLi});
+                currentLi = newLi;
+
+            } else if (tagName === 'UL' || tagName === 'OL') {
+                // Lists in Markdown are treated as children nodes.
+                // We move the LIs from this UL to the current active UL.
+
+                // If we are at Root and no heading yet, we just append to rootUl.
+                // If we are under a Heading, we append to that Heading's children UL.
+
+                const activeUl = stack[stack.length - 1].ul;
+
+                while (child.firstChild) {
+                    activeUl.appendChild(child.firstChild);
+                }
+                // The original UL/OL element is discarded, its children moved.
+
+            } else {
+                // Other content (P, Table, Pre, Blockquote, etc.)
+                // This content belongs to the current node's "card".
+                // We append it to the current LI, *before* the children UL.
+
+                const activeContext = stack[stack.length - 1];
+
+                if (activeContext.li) {
+                    // We have an active LI (we are under a heading)
+                    // Insert before the nested UL
+                    activeContext.li.insertBefore(child, activeContext.ul);
+                } else {
+                    // We are at root (level 0) and have content but no LI.
+                    // Create a generic Root LI if not exists?
+                    // Or just ignore? Markmap usually ignores top level text if not in a node.
+                    // But user wants "article like".
+                    // Let's create a default "Introduction" node if at root?
+                    // Or just append to rootUl wrapped in an LI?
+
+                    if (rootUl.children.length === 0 || rootUl.lastElementChild.querySelector('h1,h2,h3,h4,h5,h6')) {
+                        // If no children, or last child was a Heading-Node, create a new anonymous node
+                        const li = document.createElement('li');
+                        rootUl.appendChild(li);
+                        // Add a UL for consistency (though maybe not needed if no children)
+                        const newUl = document.createElement('ul');
+                        li.appendChild(newUl);
+
+                        // This anonymous node becomes active context ONLY if we want subsequent text to join it.
+                        // But if next is Heading, we pop.
+                        // Let's simpler logic: Just append content to the last LI of rootUl.
+                    }
+
+                    const lastLi = rootUl.lastElementChild;
+                    // Insert before its UL
+                    const lastLiUl = lastLi.querySelector('ul');
+                    if (lastLiUl) {
+                        lastLi.insertBefore(child, lastLiUl);
+                    } else {
+                        lastLi.appendChild(child);
+                    }
+                }
+            }
+        });
+
+        return rootUl;
+    }
+
     // --- Render ---
     function render() {
         let text = editor.value;
@@ -688,30 +747,21 @@
         const layout = layoutMode.value;
         const eqStyle = equationMode.value;
 
-        // 1. Handle Equation Styles BEFORE parsing logic
+        // 1. Strip YAML Frontmatter (e.g. --- ... ---)
+        text = text.replace(/^---[\s\S]+?---/, '');
+
+        // 2. Handle Equation Styles
         const processEquation = (mathContent) => {
             if (eqStyle === 'default') return mathContent;
-
-            // Clean up existing wraps if any to avoid nesting or partials
-            // This is a simplistic cleanup: remove \alwaysar{ and ending }
-            // Note: This assumes standard usage.
             let clean = mathContent;
             if (clean.includes('\\alwaysar{')) {
-                 // Attempt to strip it. This is heuristic.
-                 // We just remove the string "\alwaysar" and rely on LaTeX group braces {} to be benign.
                  clean = clean.replace(/\\alwaysar\s*\{/g, '{');
             }
-
-            if (eqStyle === 'english') {
-                return clean;
-            }
-            if (eqStyle === 'arabic') {
-                return `\\alwaysar{${clean}}`;
-            }
+            if (eqStyle === 'english') return clean;
+            if (eqStyle === 'arabic') return `\\alwaysar{${clean}}`;
             return mathContent;
         };
 
-        // We need to intercept the math block replacement logic to apply styles
         const mathBlocks = [];
         let cleanText = text.replace(/\$\$([\s\S]+?)\$\$/g, (m, content) => {
             const processed = processEquation(content);
@@ -732,28 +782,35 @@
             return `<span style="white-space: nowrap;">$${mathBlocks[i]}$</span>`;
         });
 
-        // 2. Render View
         if (mode === 'document') {
             output.className = 'markdown-view';
             output.innerHTML = html;
             resetZoom();
             panZoomContainer.style.width = '100%';
             previewWrapper.style.cursor = 'default';
-            // Hide layout controls for document view? Or just ignore.
         } else {
-            // Mindmap View
             output.className = 'tree ' + (layout === 'horizontal' ? 'horizontal' : '');
             panZoomContainer.style.width = 'fit-content';
             previewWrapper.style.cursor = 'grab';
             
+            // Use new Tree Conversion Logic
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = html;
-            processTreeNodes(tempDiv, 0);
+
+            const treeRoot = convertFlatHtmlToTree(tempDiv);
+
+            // Create a container for processTreeNodes to work on
+            const treeContainer = document.createElement('div');
+            treeContainer.appendChild(treeRoot);
+
+            processTreeNodes(treeContainer, 0);
+
             output.innerHTML = '';
-            if (tempDiv.querySelector('ul')) {
-                output.appendChild(tempDiv.querySelector('ul'));
+            // Append the processed root UL
+            if (treeRoot.children.length > 0) {
+                output.appendChild(treeRoot);
             } else {
-                output.innerHTML = '<p style="color:#888;">ابدأ بقائمة (-)</p>';
+                output.innerHTML = '<p style="color:#888;">ابدأ بكتابة عنوان (#) أو قائمة (-)</p>';
             }
         }
 
@@ -773,19 +830,16 @@
                 card.className = 'node-card level-' + (level % 4);
                 const contentDiv = document.createElement('div');
                 contentDiv.className = 'node-content';
+
+                // Move everything that is NOT the child UL into the card content
                 const nodesToMove = [];
                 li.childNodes.forEach(node => {
                     if (node !== childUl) nodesToMove.push(node);
                 });
                 nodesToMove.forEach(node => contentDiv.appendChild(node));
+
                 card.appendChild(contentDiv);
                 li.innerHTML = ''; 
-
-                // Reorder for DOM consistency if needed, but Flexbox handles visual order.
-                // For Vertical: Card, then UL.
-                // For Horizontal RTL: Card, then UL. Flex-row makes it [UL - Card].
-                // So standard DOM order is fine: LI > [Card, UL].
-
                 li.appendChild(card);
                 if (childUl) {
                     li.appendChild(childUl);
@@ -799,7 +853,6 @@
     function exportSmartPDF() {
         const element = document.getElementById('output');
         const originalTransform = panZoomContainer.style.transform;
-
         panZoomContainer.style.transform = 'none';
         panZoomContainer.style.width = 'fit-content';
 
@@ -811,19 +864,8 @@
                 margin:       10,
                 filename:     'arabic_mindmap.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  {
-                    scale: 2,
-                    useCORS: true,
-                    width: trueWidth,
-                    height: trueHeight,
-                    windowWidth: trueWidth,
-                    x: 0, y: 0
-                },
-                jsPDF: {
-                    unit: 'px',
-                    format: [trueWidth, trueHeight],
-                    orientation: trueWidth > trueHeight ? 'landscape' : 'portrait'
-                }
+                html2canvas:  { scale: 2, useCORS: true, width: trueWidth, height: trueHeight, windowWidth: trueWidth, x: 0, y: 0 },
+                jsPDF: { unit: 'px', format: [trueWidth, trueHeight], orientation: trueWidth > trueHeight ? 'landscape' : 'portrait' }
             };
 
             html2pdf().set(opt).from(element).save().then(() => {
@@ -836,15 +878,11 @@
     function exportToImage() {
         const element = document.getElementById('output');
         const originalTransform = panZoomContainer.style.transform;
-
         panZoomContainer.style.transform = 'none';
         panZoomContainer.style.width = 'fit-content';
 
         html2canvas(element, {
-            scale: 3,
-            backgroundColor: "#ffffff",
-            useCORS: true,
-            logging: false
+            scale: 3, backgroundColor: "#ffffff", useCORS: true, logging: false
         }).then(canvas => {
             const link = document.createElement('a');
             link.download = 'mindmap_image.png';
@@ -858,22 +896,52 @@
         });
     }
 
-    function insertArabicMath() {
-        editor.value = `- **القانون العام**
-  - لحل المعادلة التربيعية
-    - $$ x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a} $$
-    - حيث:
-      - $$ a \\neq 0 $$`;
-        // Removed explicit \alwaysar from example since we have a mode for it now,
-        // or should I leave it? The user said "default" shows as written.
-        // If I use "Arabic Mode", it will add it.
-        // I'll change the example to plain LaTeX to demonstrate the feature better.
+    function insertFullExample() {
+        editor.value = `---
+title: example
+---
+
+# مشروع الخرائط
+مرحباً بك في **محرر الخرائط الذهنية**.
+
+## المميزات الأساسية
+- دعم كامل للغة العربية.
+- كتابة بصيغة Markdown.
+
+### القوائم
+- **عريض** و *مائل*
+- قائمة مرقمة:
+  1. عنصر 1
+  2. عنصر 2
+
+### الجداول
+يمكنك وضع جداول داخل البطاقات:
+
+| المنتج | السعر |
+|--------|-------|
+| تفاح   | 10    |
+| موز    | 5     |
+
+### المعادلات
+$$ x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a} $$
+
+## روابط
+- [Google](https://google.com)
+- [GitHub](https://github.com)
+`;
         render();
     }
 
+    // --- Modal Logic ---
+    function openUsageModal() {
+        document.getElementById('usageModal').classList.add('active');
+    }
+    function closeUsageModal() {
+        document.getElementById('usageModal').classList.remove('active');
+    }
+
     window.onload = function() {
-        editor.value = "- **البداية**\n  - اضغط على زر المثال في الأعلى لتجربة المعادلات العربية";
-        render();
+        insertFullExample();
     };
 </script>
 
