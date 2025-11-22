@@ -3,40 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>محرر الخرائط - تصدير صور و PDF</title>
+    <title>محرر الخرائط والمعادلات العربية</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Amiri:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css?family=Amiri" rel="stylesheet" type="text/css">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <script type="text/x-mathjax-config">
-        MathJax.Ajax.config.path["arabic"] = "https://cdn.jsdelivr.net/gh/Edraak/arabic-mathjax@1.1/dist";
+        MathJax.Ajax.config.path["arabic"] = "lib/arabic-mathjax";
         MathJax.Hub.Config({
             extensions: ["[arabic]/arabic.js"],
-            jax: ["input/TeX", "output/SVG"], /* نستخدم SVG لأنه الأفضل في الصور */
             tex2jax: {
                 inlineMath: [["$", "$"], ["\\(", "\\)"]],
                 displayMath: [["$$", "$$"], ["\\[", "\\]"]],
                 processEscapes: true
             },
-            SVG: {
-                font: "STIX-Web",
+            "HTML-CSS": {
+                undefinedFamily: "Amiri",
                 linebreaks: { automatic: false },
                 scale: 100,
-                useFontCache: true,
-                useGlobalCache: false,
-                matchFontHeight: true
+                styles: {
+                    ".MathJax_Display": {
+                        "text-align": "center",
+                        "margin": "0"
+                    }
+                }
             }
         });
     </script>
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_SVG"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_HTMLorMML"></script>
 
     <style>
+        /* --- إعدادات عامة --- */
         :root {
             --primary-color: #2c3e50;
             --accent-color: #3498db;
@@ -46,19 +50,34 @@
 
         * { box-sizing: border-box; }
 
-        /* تنسيق MathJax SVG */
-        .MathJax_SVG_Display {
-            text-align: center;
-            margin: 5px 0;
-            overflow-x: auto;
-            overflow-y: hidden;
-            width: 100%;
+        .MathJax, .MathJax *, .MathJax_Display, .MathJax_Display * {
+            box-sizing: content-box !important;
+            border-collapse: separate !important;
+            border-spacing: 0 !important;
+            cell-spacing: 0 !important;
+            line-height: normal !important;
+            text-transform: none !important;
+            white-space: nowrap !important;
         }
-        
-        .MathJax_SVG svg {
-            min-width: 1em;
-            color: black !important;
-            fill: black !important;
+
+        .MathJax span, .MathJax div {
+            border-style: solid !important;
+            border-color: currentColor !important;
+        }
+
+        .MathJax {
+            font-family: 'Amiri', serif !important;
+            font-size: 110% !important;
+        }
+
+        .MathJax_Display {
+            margin: 5px 0 !important;
+            overflow-x: auto !important;
+            overflow-y: hidden !important;
+            padding: 8px 0 !important;
+            width: 100% !important;
+            text-align: center !important;
+            display: block !important;
         }
 
         body, html {
@@ -71,91 +90,358 @@
             overflow: hidden;
         }
 
-        .main-wrapper { display: flex; flex-direction: column; height: 100vh; }
+        .main-wrapper {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
 
         .toolbar {
-            height: 60px; background: white; padding: 0 15px; border-bottom: 1px solid #ddd;
-            display: flex; align-items: center; gap: 10px; flex-shrink: 0; z-index: 100;
+            height: 60px;
+            background: white;
+            padding: 0 15px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+            z-index: 100;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
         .btn {
-            background: white; border: 1px solid #ddd; padding: 6px 12px; border-radius: 5px;
-            cursor: pointer; font-family: 'Cairo', sans-serif; font-weight: 600; color: #555;
-            display: flex; align-items: center; gap: 5px; font-size: 13px; height: 36px; white-space: nowrap;
+            background: white;
+            border: 1px solid #ddd;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 600;
+            color: #555;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+            height: 36px;
+            white-space: nowrap;
         }
         .btn:hover { background: #f0f8ff; color: var(--accent-color); border-color: var(--accent-color); }
-        
         .btn-primary { background: var(--accent-color); color: white; border-color: var(--accent-color); }
         .btn-primary:hover { background: #2980b9; color: white; }
+        .btn-info { background: #17a2b8; color: white; border-color: #17a2b8; }
+        .btn-info:hover { background: #138496; color: white; }
+
 
         .zoom-controls {
-            display: flex; gap: 5px; margin-right: auto; background: #f8f9fa; padding: 3px;
-            border-radius: 5px; border: 1px solid #ddd;
+            display: flex;
+            gap: 5px;
+            margin-right: auto;
+            background: #f8f9fa;
+            padding: 3px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
         }
         .zoom-btn {
-            width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
-            border: none; background: white; cursor: pointer; border-radius: 3px; color: #555;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            background: white;
+            cursor: pointer;
+            border-radius: 3px;
+            color: #555;
         }
         .zoom-btn:hover { background: #e2e6ea; }
 
-        select { padding: 0 10px; height: 36px; border-radius: 5px; border: 1px solid #ddd; font-family: 'Cairo', sans-serif; }
+        select {
+            padding: 0 10px;
+            height: 36px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-family: 'Cairo', sans-serif;
+        }
 
-        .content-area { display: flex; height: calc(100vh - 60px); width: 100%; overflow: hidden; position: relative; }
+        .content-area {
+            display: flex;
+            height: calc(100vh - 60px);
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+        }
 
         @media (max-width: 767px) {
             .content-area { flex-direction: column; }
-            .editor-container { width: 100%; height: 35%; border-bottom: 2px solid #ddd; flex-shrink: 0; }
-            .preview-wrapper { width: 100%; height: 65%; flex-grow: 1; }
+            .editor-container {
+                width: 100%;
+                height: 35%;
+                border-bottom: 2px solid #ddd;
+                flex-shrink: 0;
+            }
+            .preview-wrapper {
+                width: 100%;
+                height: 65%;
+                flex-grow: 1;
+            }
             .toolbar { overflow-x: auto; } 
         }
 
         @media (min-width: 768px) {
             .content-area { flex-direction: row; }
-            .editor-container { width: 350px; height: 100%; border-left: 1px solid #ddd; flex-shrink: 0; }
-            .preview-wrapper { flex: 1; height: 100%; }
+            .editor-container {
+                width: 350px;
+                height: 100%;
+                border-left: 1px solid #ddd;
+                flex-shrink: 0;
+            }
+            .preview-wrapper {
+                flex: 1;
+                height: 100%;
+            }
         }
 
-        .editor-container { background: #fff; display: flex; flex-direction: column; z-index: 10; }
+        .editor-container {
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
         .editor-container textarea {
-            width: 100%; height: 100%; padding: 15px; border: none; resize: none;
-            font-family: 'Consolas', monospace; font-size: 14px; outline: none;
-            background: #fafafa; overflow-y: auto; direction: ltr; text-align: left;
+            width: 100%;
+            height: 100%;
+            padding: 15px;
+            border: none;
+            resize: none;
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+            outline: none;
+            background: #fafafa;
+            overflow-y: auto;
+            direction: ltr;
+            text-align: left;
         }
 
         .preview-wrapper {
-            background: #eef1f5; overflow: hidden; position: relative; cursor: grab;
-            display: flex; align-items: center; justify-content: center;
+            background: #eef1f5;
+            overflow: hidden;
+            position: relative;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .preview-wrapper:active { cursor: grabbing; }
 
         .pan-zoom-container {
-            transform-origin: center center; transition: transform 0.1s ease-out;
-            display: inline-block; width: fit-content; height: fit-content; padding: 50px;
+            transform-origin: center center;
+            transition: transform 0.1s ease-out;
+            display: inline-block;
+            width: fit-content;
+            height: fit-content;
+            padding: 50px;
         }
 
+        /* --- Tree Base Styles --- */
         .tree { direction: ltr; text-align: center; }
-        .tree ul { padding-top: 20px; position: relative; display: flex; justify-content: center; margin: 0; padding-left: 0; }
-        .tree li { float: left; text-align: center; list-style-type: none; position: relative; padding: 20px 10px 0 10px; }
-        .tree li::before, .tree li::after { content: ''; position: absolute; top: 0; right: 50%; border-top: 2px solid var(--line-color); width: 50%; height: 20px; z-index: 1; }
-        .tree li::after { right: auto; left: 50%; border-left: 2px solid var(--line-color); }
-        .tree li:only-child::after, .tree li:only-child::before { display: none; }
-        .tree li:only-child { padding-top: 0; }
-        .tree li:first-child::before, .tree li:last-child::after { border: 0 none; }
-        .tree li:last-child::before { border-right: 2px solid var(--line-color); border-radius: 0 5px 0 0; }
-        .tree li:first-child::after { border-radius: 5px 0 0 0; }
-        .tree ul ul::before { content: ''; position: absolute; top: 0; left: 50%; border-left: 2px solid var(--line-color); width: 0; height: 20px; }
+        .tree ul {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            margin: 0; padding: 0;
+        }
+        .tree li {
+            list-style-type: none;
+            position: relative;
+        }
+
+        /* --- Vertical Tree (Default) --- */
+        .tree:not(.horizontal) ul {
+            padding-top: 20px;
+        }
+        .tree:not(.horizontal) li {
+            float: left; text-align: center;
+            padding: 20px 10px 0 10px;
+        }
+        .tree:not(.horizontal) li::before, .tree:not(.horizontal) li::after {
+            content: ''; position: absolute; top: 0; right: 50%;
+            border-top: 2px solid var(--line-color);
+            width: 50%; height: 20px; z-index: 1;
+        }
+        .tree:not(.horizontal) li::after { right: auto; left: 50%; border-left: 2px solid var(--line-color); }
+        .tree:not(.horizontal) li:only-child::after, .tree:not(.horizontal) li:only-child::before { display: none; }
+        .tree:not(.horizontal) li:only-child { padding-top: 0; }
+        .tree:not(.horizontal) li:first-child::before, .tree:not(.horizontal) li:last-child::after { border: 0 none; }
+        .tree:not(.horizontal) li:last-child::before { border-right: 2px solid var(--line-color); border-radius: 0 5px 0 0; }
+        .tree:not(.horizontal) li:first-child::after { border-radius: 5px 0 0 0; }
+        .tree:not(.horizontal) ul ul::before {
+            content: ''; position: absolute; top: 0; left: 50%;
+            border-left: 2px solid var(--line-color); width: 0; height: 20px;
+        }
+
+        /* --- Horizontal Tree (RTL Support) --- */
+        .tree.horizontal {
+            direction: rtl;
+            text-align: right;
+        }
+        .tree.horizontal ul {
+            flex-direction: column;
+            padding-right: 20px;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        .tree.horizontal li {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            padding: 10px 20px 10px 0;
+            position: relative;
+        }
+        .tree.horizontal li::after {
+            content: '';
+            position: absolute;
+            right: -20px;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background: var(--line-color);
+        }
+        .tree.horizontal > ul > li::after {
+            display: none;
+        }
+        .tree.horizontal li:first-child::after {
+            top: 50%; height: 50%;
+        }
+        .tree.horizontal li:last-child::after {
+            height: 50%; top: 0;
+        }
+        .tree.horizontal li:only-child::after {
+            display: none;
+        }
+        .tree.horizontal li::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -20px;
+            width: 20px;
+            height: 2px;
+            background: var(--line-color);
+        }
+        .tree.horizontal > ul > li::before {
+            display: none;
+        }
+        .tree.horizontal .node-card {
+            position: relative;
+            z-index: 2;
+            margin-left: 20px;
+        }
+        .tree.horizontal li:has(> ul) > .node-card::after {
+             content: '';
+             position: absolute;
+             top: 50%;
+             left: -20px;
+             width: 20px;
+             height: 2px;
+             background: var(--line-color);
+        }
+        .tree.horizontal li > ul::before {
+            display: block;
+            top: 50%;
+        }
+        .tree.horizontal ul {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .tree.horizontal li {
+            padding: 5px 0;
+        }
+        .tree.horizontal ul {
+             padding-right: 40px;
+             position: relative;
+        }
+        .tree.horizontal li > ul::before {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            width: 40px;
+            height: 2px;
+            background: var(--line-color);
+            display: block;
+        }
+        .tree.horizontal li::before {
+            content: '';
+            position: absolute;
+            right: -20px;
+            top: 0;
+            height: 100%;
+            width: 2px;
+            background: var(--line-color);
+        }
+        .tree.horizontal li::after {
+             content: '';
+             position: absolute;
+             right: -20px;
+             top: 50%;
+             width: 20px;
+             height: 2px;
+             background: var(--line-color);
+        }
+        .tree.horizontal > ul > li::before,
+        .tree.horizontal > ul > li::after {
+            display: none;
+        }
+        .tree.horizontal li:first-child::before {
+            top: 50%; height: 50%;
+        }
+        .tree.horizontal li:last-child::before {
+            height: 50%; top: 0;
+        }
+        .tree.horizontal li:only-child::before {
+            display: none;
+        }
+        .tree.horizontal > ul {
+            padding-right: 0;
+        }
+        .tree.horizontal .node-content {
+             min-width: 120px;
+        }
 
         .tree .node-card {
-            background: white; border: 1px solid #ccc; border-radius: 8px; display: inline-block;
-            padding: 0; color: #333; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            min-width: 180px; max-width: 400px; position: relative; z-index: 2;
-            direction: rtl; text-align: center; vertical-align: top;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            display: inline-block;
+            padding: 0;
+            color: #333;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            min-width: 180px;
+            max-width: 400px; /* Increased max width for richer content */
+            position: relative;
+            z-index: 2;
+            direction: rtl;
+            text-align: center;
+            vertical-align: top;
         }
-        .node-content { padding: 12px; width: 100%; }
-        .node-content h1, .node-content h2, .node-content h3 { color: var(--primary-color); margin-bottom: 5px; font-size: 1.1em; font-weight: bold; }
-        .node-content table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 0.9em; }
-        .node-content th, .node-content td { border: 1px solid #eee; padding: 5px; }
+        .node-content {
+            padding: 12px;
+            width: 100%;
+            max-height: 400px;
+            overflow-y: auto;
+            text-align: right;
+        }
+        .node-content img { max-width: 100%; height: auto; }
+        .node-content h1, .node-content h2, .node-content h3 {
+            color: var(--primary-color); margin-bottom: 5px; font-size: 1.1em; font-weight: bold;
+        }
+        .node-content table {
+            width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 0.9em;
+            display: table; /* Reset block display if needed, but table is fine */
+        }
+        .node-content th, .node-content td {
+            border: 1px solid #eee; padding: 5px;
+        }
         .node-content th { background: #f9f9f9; }
         
         .level-0 .node-card { border-top: 4px solid #2980b9; }
@@ -163,7 +449,35 @@
         .level-2 .node-card { border-top: 4px solid #8e44ad; }
         .level-3 .node-card { border-top: 4px solid #e67e22; }
 
-        .markdown-view { background: white; padding: 30px; max-width: 800px; margin: 0 auto; direction: rtl; text-align: right; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        .markdown-view {
+            background: white; padding: 30px; max-width: 800px; margin: 0 auto;
+            direction: rtl; text-align: right; box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        /* --- Modal Styles --- */
+        .modal-overlay {
+            display: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 1000;
+            justify-content: center; align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-content {
+            background: white; padding: 25px; border-radius: 10px;
+            width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto;
+            direction: rtl; text-align: right;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        .modal-close {
+            position: absolute; top: 15px; left: 15px;
+            background: none; border: none; font-size: 20px; cursor: pointer; color: #999;
+        }
+        .modal-close:hover { color: #333; }
+        .modal-content h2 { margin-top: 0; color: var(--primary-color); }
+        .modal-content ul { padding-right: 20px; }
+        .modal-content li { margin-bottom: 8px; }
+        .modal-content code { background: #f4f4f4; padding: 2px 5px; border-radius: 3px; font-family: monospace; direction: ltr; display: inline-block; }
     </style>
 </head>
 <body>
@@ -175,16 +489,31 @@
             <option value="document">عرض كمستند</option>
         </select>
 
-        <button class="btn" onclick="insertArabicMath()">
-            <i class="fas fa-square-root-variable"></i> مثال معادلة
+        <select id="layoutMode" onchange="render()">
+            <option value="vertical">تخطيط عمودي</option>
+            <option value="horizontal">تخطيط أفقي</option>
+        </select>
+
+        <select id="equationMode" onchange="render()">
+            <option value="default">معادلات: افتراضي</option>
+            <option value="arabic">معادلات: عربي</option>
+            <option value="english">معادلات: إنجليزي</option>
+        </select>
+
+        <button class="btn btn-info" onclick="openUsageModal()">
+            <i class="fas fa-info-circle"></i> طريقة الاستخدام
+        </button>
+
+        <button class="btn" onclick="insertFullExample()">
+            <i class="fas fa-magic"></i> مثال شامل
         </button>
 
         <button class="btn" onclick="exportToImage()">
             <i class="fas fa-image"></i> تصدير صورة (PNG)
         </button>
 
-        <button class="btn btn-primary" onclick="exportToPDF()">
-            <i class="fas fa-file-pdf"></i> تصدير PDF (صورة)
+        <button class="btn btn-primary" onclick="exportSmartPDF()">
+            <i class="fas fa-file-pdf"></i> تحميل PDF
         </button>
 
         <div class="zoom-controls">
@@ -207,10 +536,48 @@
     </div>
 </div>
 
+<!-- Usage Modal -->
+<div class="modal-overlay" id="usageModal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeUsageModal()"><i class="fas fa-times"></i></button>
+        <h2>دليل استخدام Markdown</h2>
+        <p>يدعم المحرر تنسيق Markdown القياسي لإنشاء الخرائط الذهنية. إليك القواعد الأساسية:</p>
+
+        <h3>1. الهيكلية (Nodes):</h3>
+        <ul>
+            <li>استخدم العناوين <code>#</code> لإنشاء عقد رئيسية وفرعية.</li>
+            <li><code># عنوان رئيسي</code>: عقدة المستوى الأول.</li>
+            <li><code>## عنوان فرعي</code>: عقدة تابعة للعنوان الرئيسي.</li>
+            <li><code>### عنوان فرعي 2</code>: وهكذا.</li>
+        </ul>
+
+        <h3>2. القوائم (Lists):</h3>
+        <ul>
+            <li>استخدم القوائم <code>-</code> أو <code>*</code> لإنشاء عناصر تابعة لأي عقدة.</li>
+            <li>يمكنك استخدام قوائم متداخلة لإنشاء تفريعات.</li>
+        </ul>
+
+        <h3>3. المحتوى الغني:</h3>
+        <ul>
+            <li>أي نص، جدول، صورة، أو كود تكتبه تحت العنوان (وقبل العنوان التالي) سيظهر داخل "بطاقة" العقدة.</li>
+            <li>يمكنك إضافة جداول:
+<pre style="direction: ltr; text-align: left; background: #eee; padding: 10px;">
+| Col 1 | Col 2 |
+|-------|-------|
+| Val 1 | Val 2 |
+</pre>
+            </li>
+            <li>يمكنك إضافة معادلات رياضية باستخدام <code>$$ معادلة $$</code>.</li>
+        </ul>
+    </div>
+</div>
+
 <script>
     const editor = document.getElementById('editor');
     const output = document.getElementById('output');
     const viewMode = document.getElementById('viewMode');
+    const layoutMode = document.getElementById('layoutMode');
+    const equationMode = document.getElementById('equationMode');
     const panZoomContainer = document.getElementById('panZoomContainer');
     const previewWrapper = document.getElementById('previewWrapper');
 
@@ -227,7 +594,7 @@
         panZoomContainer.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
     }
 
-    // --- التحكم في التحريك والزووم ---
+    // --- Pan Logic ---
     previewWrapper.addEventListener('mousedown', (e) => {
         if (viewMode.value !== 'mindmap') return;
         e.preventDefault();
@@ -250,6 +617,7 @@
         updateTransform();
     });
 
+    // --- Zoom Logic ---
     previewWrapper.addEventListener('wheel', (e) => {
         if (viewMode.value === 'mindmap') {
             e.preventDefault();
@@ -264,25 +632,154 @@
     function zoomOut() { scale /= 1.2; updateTransform(); }
     function resetZoom() { scale = 1; pointX = 0; pointY = 0; updateTransform(); }
 
-    // --- الرسم (Render) ---
+    // --- Logic: Convert Flat HTML to Tree ---
+    function convertFlatHtmlToTree(container) {
+        const rootUl = document.createElement('ul');
+
+        // Stack keeps track of the current hierarchy path:
+        // Items are { ul: <the children container of this node>, level: <heading level>, li: <the node li itself> }
+        // We start with a virtual root level 0.
+        const stack = [{ul: rootUl, level: 0, li: null}];
+
+        // We also need to handle orphan content (content before any heading).
+        // We treat it as content of the current "active" node (top of stack).
+        // But standard processTreeNodes expects an LI wrapping content.
+        // So if we are at root and receive content, we might need a 'Root' LI.
+
+        let currentLi = null;
+
+        Array.from(container.children).forEach(child => {
+            const tagName = child.tagName;
+            const headerMatch = tagName.match(/^H(\d)$/);
+
+            if (headerMatch) {
+                const level = parseInt(headerMatch[1]);
+
+                // Pop stack until we find a parent with level < current heading level
+                while (stack.length > 1 && stack[stack.length - 1].level >= level) {
+                    stack.pop();
+                }
+
+                const parent = stack[stack.length - 1];
+
+                // Create new List Item for this Heading
+                const newLi = document.createElement('li');
+
+                // Append the Heading itself
+                newLi.appendChild(child);
+
+                // Append this LI to the parent's UL
+                parent.ul.appendChild(newLi);
+
+                // Create a UL for potential children of this Heading
+                const newUl = document.createElement('ul');
+                newLi.appendChild(newUl);
+
+                // Push to stack
+                stack.push({ul: newUl, level: level, li: newLi});
+                currentLi = newLi;
+
+            } else if (tagName === 'UL' || tagName === 'OL') {
+                // Lists in Markdown are treated as children nodes.
+                // We move the LIs from this UL to the current active UL.
+
+                // If we are at Root and no heading yet, we just append to rootUl.
+                // If we are under a Heading, we append to that Heading's children UL.
+
+                const activeUl = stack[stack.length - 1].ul;
+
+                while (child.firstChild) {
+                    activeUl.appendChild(child.firstChild);
+                }
+                // The original UL/OL element is discarded, its children moved.
+
+            } else {
+                // Other content (P, Table, Pre, Blockquote, etc.)
+                // This content belongs to the current node's "card".
+                // We append it to the current LI, *before* the children UL.
+
+                const activeContext = stack[stack.length - 1];
+
+                if (activeContext.li) {
+                    // We have an active LI (we are under a heading)
+                    // Insert before the nested UL
+                    activeContext.li.insertBefore(child, activeContext.ul);
+                } else {
+                    // We are at root (level 0) and have content but no LI.
+                    // Create a generic Root LI if not exists?
+                    // Or just ignore? Markmap usually ignores top level text if not in a node.
+                    // But user wants "article like".
+                    // Let's create a default "Introduction" node if at root?
+                    // Or just append to rootUl wrapped in an LI?
+
+                    if (rootUl.children.length === 0 || rootUl.lastElementChild.querySelector('h1,h2,h3,h4,h5,h6')) {
+                        // If no children, or last child was a Heading-Node, create a new anonymous node
+                        const li = document.createElement('li');
+                        rootUl.appendChild(li);
+                        // Add a UL for consistency (though maybe not needed if no children)
+                        const newUl = document.createElement('ul');
+                        li.appendChild(newUl);
+
+                        // This anonymous node becomes active context ONLY if we want subsequent text to join it.
+                        // But if next is Heading, we pop.
+                        // Let's simpler logic: Just append content to the last LI of rootUl.
+                    }
+
+                    const lastLi = rootUl.lastElementChild;
+                    // Insert before its UL
+                    const lastLiUl = lastLi.querySelector('ul');
+                    if (lastLiUl) {
+                        lastLi.insertBefore(child, lastLiUl);
+                    } else {
+                        lastLi.appendChild(child);
+                    }
+                }
+            }
+        });
+
+        return rootUl;
+    }
+
+    // --- Render ---
     function render() {
-        const text = editor.value;
+        let text = editor.value;
         const mode = viewMode.value;
+        const layout = layoutMode.value;
+        const eqStyle = equationMode.value;
+
+        // 1. Strip YAML Frontmatter (e.g. --- ... ---)
+        text = text.replace(/^---[\s\S]+?---/, '');
+
+        // 2. Handle Equation Styles
+        const processEquation = (mathContent) => {
+            if (eqStyle === 'default') return mathContent;
+            let clean = mathContent;
+            if (clean.includes('\\alwaysar{')) {
+                 clean = clean.replace(/\\alwaysar\s*\{/g, '{');
+            }
+            if (eqStyle === 'english') return clean;
+            if (eqStyle === 'arabic') return `\\alwaysar{${clean}}`;
+            return mathContent;
+        };
 
         const mathBlocks = [];
-        let cleanText = text.replace(/\$\$([\s\S]+?)\$\$/g, (m) => {
-            mathBlocks.push(m); return `MATHBLOCK_${mathBlocks.length - 1}`;
-        }).replace(/\$([^\$\n]+?)\$/g, (m) => {
-            mathBlocks.push(m); return `MATHINLINE_${mathBlocks.length - 1}`;
+        let cleanText = text.replace(/\$\$([\s\S]+?)\$\$/g, (m, content) => {
+            const processed = processEquation(content);
+            mathBlocks.push(processed);
+            return `MATHBLOCK_${mathBlocks.length - 1}`;
+        }).replace(/\$([^\$\n]+?)\$/g, (m, content) => {
+            const processed = processEquation(content);
+            mathBlocks.push(processed);
+            return `MATHINLINE_${mathBlocks.length - 1}`;
         });
 
         let html = marked.parse(cleanText);
 
-        // معالجة الأكواد لضمان التمرير
+        // Reinsert Math
         html = html.replace(/MATHBLOCK_(\d+)/g, (m, i) => {
-            return `<div class="math-scroll-container">$$${mathBlocks[i].replace(/\$\$/g, '')}$$</div>`;
+            return `<div class="math-scroll-container">$$${mathBlocks[i]}$$</div>`;
         }).replace(/MATHINLINE_(\d+)/g, (m, i) => {
-            return `<span>${mathBlocks[i]}</span>`;
+            return `<span style="white-space: nowrap;">$${mathBlocks[i]}$</span>`;
         });
 
         if (mode === 'document') {
@@ -292,18 +789,28 @@
             panZoomContainer.style.width = '100%';
             previewWrapper.style.cursor = 'default';
         } else {
-            output.className = 'tree';
+            output.className = 'tree ' + (layout === 'horizontal' ? 'horizontal' : '');
             panZoomContainer.style.width = 'fit-content';
             previewWrapper.style.cursor = 'grab';
             
+            // Use new Tree Conversion Logic
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = html;
-            processTreeNodes(tempDiv, 0);
+
+            const treeRoot = convertFlatHtmlToTree(tempDiv);
+
+            // Create a container for processTreeNodes to work on
+            const treeContainer = document.createElement('div');
+            treeContainer.appendChild(treeRoot);
+
+            processTreeNodes(treeContainer, 0);
+
             output.innerHTML = '';
-            if (tempDiv.querySelector('ul')) {
-                output.appendChild(tempDiv.querySelector('ul'));
+            // Append the processed root UL
+            if (treeRoot.children.length > 0) {
+                output.appendChild(treeRoot);
             } else {
-                output.innerHTML = '<p style="color:#888;">ابدأ بقائمة (-)</p>';
+                output.innerHTML = '<p style="color:#888;">ابدأ بكتابة عنوان (#) أو قائمة (-)</p>';
             }
         }
 
@@ -323,11 +830,14 @@
                 card.className = 'node-card level-' + (level % 4);
                 const contentDiv = document.createElement('div');
                 contentDiv.className = 'node-content';
+
+                // Move everything that is NOT the child UL into the card content
                 const nodesToMove = [];
                 li.childNodes.forEach(node => {
                     if (node !== childUl) nodesToMove.push(node);
                 });
                 nodesToMove.forEach(node => contentDiv.appendChild(node));
+
                 card.appendChild(contentDiv);
                 li.innerHTML = ''; 
                 li.appendChild(card);
@@ -339,103 +849,99 @@
         });
     }
 
-    // --- تصدير كصورة (Screenshot) ---
+    // --- PDF Export ---
+    function exportSmartPDF() {
+        const element = document.getElementById('output');
+        const originalTransform = panZoomContainer.style.transform;
+        panZoomContainer.style.transform = 'none';
+        panZoomContainer.style.width = 'fit-content';
+
+        setTimeout(() => {
+            const trueWidth = element.scrollWidth + 60;
+            const trueHeight = element.scrollHeight + 60;
+
+            const opt = {
+                margin:       10,
+                filename:     'arabic_mindmap.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, width: trueWidth, height: trueHeight, windowWidth: trueWidth, x: 0, y: 0 },
+                jsPDF: { unit: 'px', format: [trueWidth, trueHeight], orientation: trueWidth > trueHeight ? 'landscape' : 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                panZoomContainer.style.transform = originalTransform;
+            });
+        }, 100);
+    }
+
+    // --- Image Export ---
     function exportToImage() {
         const element = document.getElementById('output');
         const originalTransform = panZoomContainer.style.transform;
-        const originalWidth = panZoomContainer.style.width;
-
-        // 1. إعادة تعيين الوضع لأخذ لقطة كاملة
         panZoomContainer.style.transform = 'none';
         panZoomContainer.style.width = 'fit-content';
 
-        // 2. التقاط الصورة باستخدام html2canvas
-        // scale: 2 يضمن جودة عالية
         html2canvas(element, {
-            scale: 2, 
-            backgroundColor: "#ffffff", // خلفية بيضاء للصورة
-            useCORS: true
+            scale: 3, backgroundColor: "#ffffff", useCORS: true, logging: false
         }).then(canvas => {
-            // إنشاء رابط التحميل
             const link = document.createElement('a');
-            link.download = 'mindmap.png';
-            link.href = canvas.toDataURL();
+            link.download = 'mindmap_image.png';
+            link.href = canvas.toDataURL("image/png");
             link.click();
-
-            // استعادة الوضع السابق
             panZoomContainer.style.transform = originalTransform;
-            panZoomContainer.style.width = originalWidth;
         }).catch(err => {
-            console.error("Error creating image:", err);
+            console.error(err);
             alert("حدث خطأ أثناء إنشاء الصورة");
-            // استعادة الوضع في حال الخطأ
             panZoomContainer.style.transform = originalTransform;
-            panZoomContainer.style.width = originalWidth;
         });
     }
 
-    // --- تصدير PDF عن طريق الصورة (Screenshot inside PDF) ---
-    function exportToPDF() {
-        const element = document.getElementById('output');
-        const originalTransform = panZoomContainer.style.transform;
-        const originalWidth = panZoomContainer.style.width;
+    function insertFullExample() {
+        editor.value = `---
+title: example
+---
 
-        panZoomContainer.style.transform = 'none';
-        panZoomContainer.style.width = 'fit-content';
+# مشروع الخرائط
+مرحباً بك في **محرر الخرائط الذهنية**.
 
-        // 1. نأخذ لقطة بجودة عالية جداً (Scale 3)
-        html2canvas(element, {
-            scale: 3,
-            backgroundColor: "#ffffff",
-            useCORS: true
-        }).then(canvas => {
-            // 2. نحصل على أبعاد الصورة الناتجة
-            const imgData = canvas.toDataURL('image/png');
-            const imgWidth = canvas.width;
-            const imgHeight = canvas.height;
+## المميزات الأساسية
+- دعم كامل للغة العربية.
+- كتابة بصيغة Markdown.
 
-            // 3. إنشاء ملف PDF بنفس أبعاد الصورة (بالبكسل)
-            // هذا يضمن أن الصورة تملأ الصفحة تماماً بدون هوامش بيضاء مزعجة
-            // ونستخدم landscape إذا كان العرض أكبر من الطول
-            const orientation = imgWidth > imgHeight ? 'l' : 'p';
-            
-            // ملاحظة: نستخدم وحدة 'px' ومقاسات مخصصة [width, height]
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF({
-                orientation: orientation,
-                unit: 'px',
-                format: [imgWidth, imgHeight]
-            });
+### القوائم
+- **عريض** و *مائل*
+- قائمة مرقمة:
+  1. عنصر 1
+  2. عنصر 2
 
-            // 4. وضع الصورة داخل الـ PDF
-            pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-            pdf.save('mindmap_snapshot.pdf');
+### الجداول
+يمكنك وضع جداول داخل البطاقات:
 
-            // استعادة الوضع
-            panZoomContainer.style.transform = originalTransform;
-            panZoomContainer.style.width = originalWidth;
-        }).catch(err => {
-            console.error("Error generating PDF:", err);
-            alert("حدث خطأ أثناء إنشاء ملف PDF");
-            panZoomContainer.style.transform = originalTransform;
-            panZoomContainer.style.width = originalWidth;
-        });
-    }
+| المنتج | السعر |
+|--------|-------|
+| تفاح   | 10    |
+| موز    | 5     |
 
-    function insertArabicMath() {
-        editor.value = `- **العمليات على الأعداد النسبية**
-  - **الجمع والطرح**
-    - عند توحيد المقامات:
-      - $$\\alwaysar{\\frac{a}{b} \\pm \\frac{c}{b} = \\frac{a \\pm c}{b}}$$
-    - عند اختلاف المقامات:
-      - $$\\alwaysar{\\frac{a}{b} \\pm \\frac{c}{d} = \\frac{ad \\pm bc}{bd}}$$
-  - **الضرب**
-    - $$\\alwaysar{\\frac{a}{b} \\times \\frac{c}{d} = \\frac{ac}{bd}}$$`;
+### المعادلات
+$$ x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a} $$
+
+## روابط
+- [Google](https://google.com)
+- [GitHub](https://github.com)
+`;
         render();
     }
 
+    // --- Modal Logic ---
+    function openUsageModal() {
+        document.getElementById('usageModal').classList.add('active');
+    }
+    function closeUsageModal() {
+        document.getElementById('usageModal').classList.remove('active');
+    }
+
     window.onload = function() {
-        insertArabicMath();
+        insertFullExample();
     };
 </script>
 
